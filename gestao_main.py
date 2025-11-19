@@ -380,6 +380,203 @@ if pagina == "Gestão de Colaboradores":
     else:
         st.info("Nenhum colaborador encontrado com esses filtros.")
 
+# --------------------------
+# FOLHA DE PAGAMENTO
+# --------------------------
+elif pagina == "Folha de Pagamento":
+    st.title("💼 Folha de Pagamento")
+
+    col1, col2, col3 = st.columns([2,2,1])
+    with col1:
+        unidade_sel = st.selectbox("Unidade (filtrar)", options=["(Todas)"] + UNIDADES, index=0)
+    with col2:
+        mes_input = st.date_input("Mês de referência (escolha qualquer dia desse mês)", value=date.today().replace(day=1))
+        # normalizar para primeiro dia do mês
+        mes_ref = date(mes_input.year, mes_input.month, 1)
+    with col3:
+        st.write("")  # espaço
+        if st.button("Gerar lançamentos para unidade/mês"):
+            # pegar colaboradores da unidade (ou todos)
+            if unidade_sel == "(Todas)":
+                q_col = "SELECT id, nome, salario_cents, conta_deposito, cpf, unidade FROM colaboradores"
+                params = ()
+            else:
+                q_col = "SELECT id, nome, salario_cents, conta_deposito, cpf, unidade FROM colaboradores WHERE unidade = %s"
+                params = (unidade_sel,)
+            cols = read_df(q_col, params)
+            if cols.empty:
+                st.warning("Nenhum colaborador encontrado para gerar lançamentos.")
+            else:
+                inserted = 0
+                for _, r in cols.iterrows():
+                    colaborador_id = int(r["id"])
+                    colaborador_nome = r["nome"]
+                    cpf = r.get("cpf")
+                    conta = r.get("conta_deposito")
+                    salario_cents = int(r["salario_cents"]) if pd.notna(r["salario_cents"]) else 0
+                    unidade = r.get("unidade")
+                    # inserir só se não existir
+                    cursor.execute("""
+                        SELECT 1 FROM folha_pagamento
+                        WHERE colaborador_id = %s AND mes_referencia = %s
+                        LIMIT 1
+                    """, (colaborador_id, mes_ref))
+                    if cursor.fetchone():
+                        continue
+                    cursor.execute("""
+                        INSERT INTO folha_pagamento (
+                            colaborador_id, colaborador_nome, cpf, unidade, mes_referencia,
+                            salario_base_cents, valor_depositado_cents, conta_deposito
+                        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                    """, (
+                        colaborador_id, colaborador_nome, cpf, unidade, mes_ref,
+                        salario_cents, None, conta
+                    ))
+                    inserted += 1
+                conn.commit()
+                st.success(f"{inserted} lançamentos gerados (não duplicados).")
+
+    st.markdown("---")
+
+    # buscar lançamentos para o filtro
+    if unidade_sel == "(Todas)":
+        df_f = read_df("SELECT * FROM folha_pagamento WHERE mes_referencia = %s ORDER BY colaborador_nome", params=(mes_ref,))
+    else:
+        df_f = read_df("SELECT * FROM folha_pagamento WHERE mes_referencia = %s AND unidade = %s ORDER BY colaborador_nome", params=(mes_ref, unidade_sel))
+
+    if df_f.empty:
+        st.info("Nenhum lançamento para o mês/unidade selecionados.")
+    else:
+        # preparar colunas de exibição
+        df_show = df_f.copy()
+        df_show["salario_base_reais"] = df_show["salario_base_cents"].apply(cents_to_real)
+        df_show["valor_depositado_reais"] = df_show["valor_depositado_cents"].apply(cents_to_real)
+        df_show["mes_referencia_str"] = pd.to_datetime(df_show["mes_referencia"]).dt.strftime("%Y-%m")
+        display_cols = ["id","colaborador_nome","salario_base_reais","valor_depositado_reais","conta_deposito","mes_referencia_str","data_pagamento","cpf"]
+        st.dataframe(df_show[display_cols].rename(columns={
+            "colaborador_nome":"Nome",
+            "salario_base_reais":"Salário base (R$)",
+            "valor_depositado_reais":"Valor depositado (R$)",
+            "conta_deposito":"Conta",
+            "mes_referencia_str":"Mês",
+            "data_pagamento":"Data Pagamento",
+            "cpf":"CPF",
+            "id":"ID"
+        }))
+
+        # seleção para edição/exportação
+        st.markdown("### Selecionar para editar / exportar")
+        df_show_idx = df_show.reset_index(drop=True)
+        df_show_idx["select"] = False
+        # build a simple selection UI (checkboxes)
+        selected_ids = []
+        for i, row in df_show_idx.iterrows():
+            col1, col2 = st.columns([8,1])
+            with col1:
+                st.write(f"{row['id']} — {row['colaborador_nome']} — Salário: {cents_to_real(row['salario_base_cents'])}")
+            with col2:
+                if st.checkbox("Selecionar", key=f"sel_{int(row['id'])}"):
+                    selected_ids.append(int(row["id"]))
+
+        # botão editar linha (abrir formulário)
+        st.markdown("---")
+        st.subheader("Editar um lançamento")
+        edit_id = st.number_input("Informe o ID do lançamento para editar", min_value=1, step=1, value=0)
+        if edit_id:
+            df_sel = df_f[df_f["id"] == edit_id]
+            if df_sel.empty:
+                st.error("ID não encontrado para o mês/unidade selecionados.")
+            else:
+                r = df_sel.iloc[0]
+                with st.form("editar_lanc"):
+                    nome = st.text_input("Nome (readonly)", r["colaborador_nome"], disabled=True)
+                    salario_base = st.number_input("Salário base (R$)", value=cents_to_real(r["salario_base_cents"]) or 0.0, format="%.2f")
+                    valor_depositado = st.number_input("Valor depositado (R$)", value=cents_to_real(r["valor_depositado_cents"]) if r["valor_depositado_cents"] is not None else 0.0, format="%.2f")
+                    conta = st.text_input("Conta de depósito", r.get("conta_deposito") or "")
+                    data_pag = st.date_input("Data de pagamento", value=r["data_pagamento"] if r["data_pagamento"] is not None else date.today())
+                    obs = st.text_area("Observações", r.get("observacoes") or "")
+                    btn = st.form_submit_button("Salvar alteração")
+                    if btn:
+                        cursor.execute("""
+                            UPDATE folha_pagamento
+                            SET salario_base_cents=%s, valor_depositado_cents=%s, conta_deposito=%s, data_pagamento=%s, observacoes=%s
+                            WHERE id=%s
+                        """, (
+                            real_to_cents(salario_base),
+                            real_to_cents(valor_depositado),
+                            conta,
+                            data_pag,
+                            obs,
+                            edit_id
+                        ))
+                        conn.commit()
+                        st.success("Alteração salva.")
+                        st.experimental_rerun()
+
+        # --------------------
+        # Exportar para XLSX
+        # --------------------
+        st.markdown("---")
+        st.subheader("Exportar para Excel (.xlsx)")
+        st.write("Por padrão serão exportadas as 8 colunas: id, nome, valor_depositado, conta, salario_base, mês, data_pagamento, cpf (nessa ordem).")
+        incluir_extras = st.checkbox("Incluir colunas extras (horas_extras, bonus, descontos, observacoes)", value=False)
+
+        if st.button("Exportar selecionados (XLSX)"):
+            if not selected_ids:
+                st.error("Nenhum lançamento selecionado para exportação.")
+            else:
+                q = f"SELECT * FROM folha_pagamento WHERE id IN ({','.join(['%s']*len(selected_ids))}) ORDER BY colaborador_nome"
+                df_export = read_df(q, params=tuple(selected_ids))
+                if df_export.empty:
+                    st.error("Erro: nada para exportar.")
+                else:
+                    # construir DataFrame na ordem pedida
+                    df_export["valor_depositado_reais"] = df_export["valor_depositado_cents"].apply(cents_to_real)
+                    df_export["salario_base_reais"] = df_export["salario_base_cents"].apply(cents_to_real)
+                    df_export["mes_referencia"] = pd.to_datetime(df_export["mes_referencia"]).dt.strftime("%Y-%m")
+                    cols_order = ["id","colaborador_nome","valor_depositado_reais","conta_deposito","salario_base_reais","mes_referencia","data_pagamento","cpf"]
+                    rename_map = {
+                        "colaborador_nome":"Nome",
+                        "valor_depositado_reais":"Valor depositado (R$)",
+                        "conta_deposito":"Conta de depósito",
+                        "salario_base_reais":"Salário base (R$)",
+                        "mes_referencia":"Mês referência",
+                        "data_pagamento":"Data pagamento",
+                        "cpf":"CPF",
+                        "id":"ID"
+                    }
+                    df_out = df_export.copy()
+                    # se tiver colunas faltando, preencher com None
+                    for c in cols_order:
+                        if c not in df_out.columns:
+                            df_out[c] = None
+                    df_out = df_out[cols_order].rename(columns=rename_map)
+                    if incluir_extras:
+                        extras = ["horas_extras_cents","bonus_cents","descontos_cents","observacoes"]
+                        for e in extras:
+                            if e in df_export.columns:
+                                df_out[e] = df_export[e]
+                            else:
+                                df_out[e] = None
+                        # converter extras cents -> reais se aplicável
+                        for e in ["horas_extras_cents","bonus_cents","descontos_cents"]:
+                            if e in df_out.columns:
+                                df_out[e.replace("_cents","")] = df_out[e].apply(cents_to_real)
+                                df_out.drop(columns=[e], inplace=True)
+
+                    # criar arquivo em memória
+                    towrite = io.BytesIO()
+                    with pd.ExcelWriter(towrite, engine="openpyxl") as writer:
+                        df_out.to_excel(writer, index=False, sheet_name="Folha")
+                    towrite.seek(0)
+                    st.download_button(
+                        label="⬇️ Baixar Excel (selecionados)",
+                        data=towrite,
+                        file_name=f"folha_{mes_ref.strftime('%Y_%m')}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
+
+
 # =========================================================
 # RELATÓRIOS E ESTATÍSTICAS
 # =========================================================
