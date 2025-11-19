@@ -1,4 +1,6 @@
 streamlit
-pandas
-plotly
 psycopg2-binary
+pandas
+openpyxl
+plotly
+sqlalchemy
