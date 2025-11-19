@@ -17,9 +17,6 @@ if not DATABASE_URL:
 # remover aspas se tiver
 DATABASE_URL = DATABASE_URL.strip().strip('"').strip("'")
 
-# mostrar host (debug seguro)
-st.write("Conectando ao host:", DATABASE_URL.split("@")[-1].split("/")[0])
-
 # conectar ao PostgreSQL (NEON exige SSL)
 conn = psycopg2.connect(DATABASE_URL)
 cursor = conn.cursor()
