@@ -164,7 +164,7 @@ if pagina == "Gestão de Colaboradores":
                 nome = st.text_input("Nome", placeholder="Nome completo do colaborador")
             with col2:
                 funcao = st.selectbox("Função", FUNCOES, index=None
-                if funcao = "Outro..."
+                if funcao == "Outro...":
                     st.text_input("")
                 )
             with col3:
