@@ -26,6 +26,10 @@ cursor = conn.cursor()
 # ==========================================
 
 # ----- TABELA COLABORADORES -----
+
+cursor.execute("SELECT DISTINCT unidade FROM colaboradores")
+UNIDADES = [row[0] for row in cursor.fetchall() if row[0]]  # remover None
+
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS colaboradores (
     id SERIAL PRIMARY KEY,
@@ -701,18 +705,6 @@ elif pagina == "Relatórios Avançados":
 # =========================================================
 
 import io
-
-# Converter centavos para reais
-def cents_to_real(c):
-    if c is None:
-        return 0.0
-    return round(c / 100.0, 2)
-
-# Converter reais para centavos
-def real_to_cents(r):
-    if r is None:
-        return 0
-    return int(round(float(r) * 100))
 
 # Validar CPF (simples)
 def validar_cpf(cpf):
