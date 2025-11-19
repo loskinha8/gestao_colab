@@ -52,6 +52,26 @@ CREATE TABLE IF NOT EXISTS colaboradores (
 """)
 conn.commit()
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS folha_pagamento (
+    id SERIAL PRIMARY KEY,
+    colaborador_id INTEGER,
+    colaborador_nome TEXT,
+    cpf TEXT,
+    unidade TEXT,
+    mes_referencia DATE,
+    salario_base_cents INTEGER,
+    valor_depositado_cents INTEGER,
+    conta_deposito TEXT,
+    data_pagamento DATE,
+    observacoes TEXT,
+    -- extras if needed:
+    horas_extras_cents INTEGER,
+    bonus_cents INTEGER,
+    descontos_cents INTEGER
+)""")
+conn.commit()
+
 # --------------------------
 # Funções utilitárias
 # --------------------------
@@ -125,7 +145,7 @@ FUNCOES = ["Alimentador de Linha de Produção", "Auxiliar Administrativo(a)"]
 
 # --- Menu lateral ---
 st.sidebar.title("📂 Navegação")
-pagina = st.sidebar.radio("Ir para:", ["Gestão de Colaboradores", "Relatórios e Estatísticas"])
+pagina = st.sidebar.radio("Ir para:", ["Gestão de Colaboradores", "Folha de Pagamento", "Relatórios e Estatísticas"])
 
 # =========================================================
 # GESTÃO
