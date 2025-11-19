@@ -17,7 +17,6 @@ if not DATABASE_URL:
 
 conn = psycopg2.connect(DATABASE_URL)
 cursor = conn.cursor()
-st.write("ConnectDB =", os.getenv("ConnectDB"))
 
 # --- Criar tabela (caso não exista) ---
 cursor.execute("""
