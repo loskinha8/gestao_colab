@@ -163,11 +163,13 @@ if pagina == "Gestão de Colaboradores":
             with col1:
                 nome = st.text_input("Nome", placeholder="Nome completo do colaborador")
             with col2:
-                funcao = st.selectbox("Função", FUNCOES + ["Outro..."], index=None)
+                opcoes = FUNCOES + ["Outro..."]
+                escolha = st.selectbox("Função", opcoes, index=None)
             
-                if funcao == "Outro...":
-                    funcao = st.text_input("Digite a função:")
-
+                if escolha == "Outro...":
+                    funcao = st.text_input("Digite outra função:")
+                else:
+                    funcao = escolha
             with col3:
                 unidade = st.selectbox("Unidade", UNIDADES, index=None)
 
