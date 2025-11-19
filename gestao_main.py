@@ -6,20 +6,21 @@ from datetime import datetime, date, timedelta
 import os
 import psycopg2
 
-# --- Configuração da página ---
-st.set_page_config(page_title="Gestão de Colaboradores", page_icon="👟", layout="wide")
 
-# --- Conexão com banco ---
+# pegar variável do secrets
 DATABASE_URL = os.getenv("ConnectDB")
-st.write("DEBUG DATABASE_URL =", repr(os.getenv("ConnectDB")))
-
-if DATABASE_URL:
-    DATABASE_URL = DATABASE_URL.strip().strip('"').strip("'")
 
 if not DATABASE_URL:
-    st.error("Variável de ambiente 'ConnectDB' não encontrada. Configure a DATABASE_URL/ConnectDB e reinicie o app.")
+    st.error("Variável ConnectDB não encontrada no Secrets.")
     st.stop()
 
+# remover aspas se tiver
+DATABASE_URL = DATABASE_URL.strip().strip('"').strip("'")
+
+# mostrar host (debug seguro)
+st.write("Conectando ao host:", DATABASE_URL.split("@")[-1].split("/")[0])
+
+# conectar ao PostgreSQL (NEON exige SSL)
 conn = psycopg2.connect(DATABASE_URL)
 cursor = conn.cursor()
 
