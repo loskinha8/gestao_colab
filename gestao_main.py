@@ -144,7 +144,8 @@ if pagina == "Gestão de Colaboradores":
             with col1:
                 nome = st.text_input("Nome", placeholder="Nome completo do colaborador")
             with col2:
-                funcao = st.selectbox("Função", FUNCOES, index=None, placeholder="Escolha ou digite a função")
+                funcao = st.text_input("Função", placeholder="Digite a função")
+                st.caption("Sugestões: " + ", ".join(FUNCOES))
             with col3:
                 unidade = st.selectbox("Unidade", UNIDADES, index=None)
 
