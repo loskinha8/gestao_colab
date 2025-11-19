@@ -11,6 +11,10 @@ st.set_page_config(page_title="Gestão de Colaboradores", page_icon="👟", layo
 
 # --- Conexão com banco ---
 DATABASE_URL = os.getenv("ConnectDB")
+
+if DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.strip().strip('"').strip("'")
+
 if not DATABASE_URL:
     st.error("Variável de ambiente 'ConnectDB' não encontrada. Configure a DATABASE_URL/ConnectDB e reinicie o app.")
     st.stop()
