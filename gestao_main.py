@@ -142,6 +142,11 @@ def read_df(query_or_where=None, params=None):
 # =========================================================
 # Bloco 3 - FOLHA DE PAGAMENTO
 # =========================================================
+
+pagina = st.sidebar.radio(
+    "Ir para:",
+    ["Gestão de Colaboradores", "Folha de Pagamento", "Relatórios e Estatísticas"]
+)
 if pagina == "Folha de Pagamento":
     st.title("💼 Folha de Pagamento")
 
