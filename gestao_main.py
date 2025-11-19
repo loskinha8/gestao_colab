@@ -125,9 +125,11 @@ if pagina == "Gestão de Colaboradores":
                 ativo_str = st.selectbox("Status", ["Ativo", "Não-ativo"]) 
                 ativo = True if ativo_str == "Ativo" else False
             with col3:
-                admissao = st.date_input("Admissão", value=None)
+                admissao = st.date_input("Admissão", value=None,
+                    min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
             with col4:
-                saida = st.date_input("Saída", value=None)
+                saida = st.date_input("Saída", value=None,
+                    min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
 
             col1, col2, col3 = st.columns(3)
             with col1:
@@ -139,9 +141,12 @@ if pagina == "Gestão de Colaboradores":
 
             col1, col2 = st.columns(2)
             with col1:
-                emissao = st.date_input("Emissão", value=None)
+                emissao = st.date_input("Emissão", value=None,
+                    min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
             with col2:
-                nascimento = st.date_input("Nascimento", value=None)
+                nascimento = st.date_input("Nascimento", value=None,
+                    min_value=date(1900, 1, 1), max_value=date(2100, 12, 31))
+
 
             col1, col2, col3 = st.columns(3)
             with col1:
@@ -232,9 +237,19 @@ if pagina == "Gestão de Colaboradores":
                     ativo_str = st.selectbox("Status", ["Ativo", "Não-ativo"], index=0 if int(dados["ativo"]) == 1 else 1)
                     ativo = True if ativo_str == "Ativo" else False
                 with col3:
-                    admissao = st.date_input("Admissão", to_date_or_none(dados["admissao"]))
+                    admissao = st.date_input(
+                        "Admissão",
+                        value=to_date_or_none(dados["admissao"]),
+                        min_value=date(1900, 1, 1),
+                        max_value=date(2100, 12, 31)
+                    )
                 with col4:
-                    saida = st.date_input("Saída", to_date_or_none(dados["saida"]))
+                    saida = st.date_input(
+                        "Saída",
+                        value=to_date_or_none(dados["saida"]),
+                        min_value=date(1900, 1, 1),
+                        max_value=date(2100, 12, 31)
+                    )
 
                 col1, col2, col3 = st.columns(3)
                 with col1:
@@ -246,9 +261,19 @@ if pagina == "Gestão de Colaboradores":
 
                 col1, col2 = st.columns(2)
                 with col1:
-                    emissao = st.date_input("Emissão", to_date_or_none(dados["emissao"]))
+                    emissao = st.date_input(
+                        "Emissão",
+                        value=to_date_or_none(dados["emissao"]),
+                        min_value=date(1900, 1, 1),
+                        max_value=date(2100, 12, 31)
+                    )
                 with col2:
-                    nascimento = st.date_input("Nascimento", to_date_or_none(dados["nascimento"]))
+                    nascimento = st.date_input(
+                        "Nascimento",
+                        value=to_date_or_none(dados["nascimento"]),
+                        min_value=date(1900, 1, 1),
+                        max_value=date(2100, 12, 31)
+                    )
 
                 col1, col2, col3 = st.columns(3)
                 with col1:
