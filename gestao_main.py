@@ -490,7 +490,9 @@ elif pagina == "Folha de Pagamento":
 
     # buscar lançamentos para o filtro
     if unidade_sel == "(Todas)":
-        df_f = read_df("SELECT * FROM folha_pagamento WHERE mes_referencia = %s ORDER BY colaborador_nome", params=(mes_ref,))
+        df_f = pd.read_sql_query(
+        "SELECT * FROM folha_pagamento WHERE mes_referencia = %s ORDER BY colaborador_nome", conn, params=(mes_ref,)
+        )
     else:
         df_f = read_df("SELECT * FROM folha_pagamento WHERE mes_referencia = %s AND unidade = %s ORDER BY colaborador_nome", params=(mes_ref, unidade_sel))
 
