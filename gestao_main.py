@@ -65,7 +65,6 @@ CREATE TABLE IF NOT EXISTS folha_pagamento (
     conta_deposito TEXT,
     data_pagamento DATE,
     observacoes TEXT,
-    -- extras if needed:
     horas_extras_cents INTEGER,
     bonus_cents INTEGER,
     descontos_cents INTEGER
@@ -164,7 +163,10 @@ if pagina == "Gestão de Colaboradores":
             with col1:
                 nome = st.text_input("Nome", placeholder="Nome completo do colaborador")
             with col2:
-                funcao = st.selectbox("Função", FUNCOES, index=None)
+                funcao = st.selectbox("Função", FUNCOES, index=None
+                if funcao = "Outro..."
+                    st.text_input("")
+                )
             with col3:
                 unidade = st.selectbox("Unidade", UNIDADES, index=None)
 
