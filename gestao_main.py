@@ -55,6 +55,35 @@ conn.commit()
 # --------------------------
 # Funções utilitárias
 # --------------------------
+def cents_to_real(cents: int) -> str:
+    """
+    Converte um valor em centavos (inteiro) para string em reais no formato brasileiro.
+    Ex: 12345 → "123,45"
+    """
+    if cents is None:
+        return "0,00"
+    return f"{cents/100:.2f}".replace(".", ",")
+
+def real_to_cents(valor: str) -> int:
+    """
+    Converte um valor em reais (string) no formato brasileiro para centavos (inteiro).
+    Ex: "123,45" → 12345
+    """
+    if not valor:
+        return 0
+
+    # Remove espaços e símbolos
+    valor = valor.strip().replace("R$", "").replace(" ", "")
+
+    # Troca vírgula por ponto
+    valor = valor.replace(",", ".")
+
+    try:
+        return int(float(valor) * 100)
+    except ValueError:
+        return 0
+
+
 def to_date_or_none(s):
     try:
         if not s or str(s).strip() == "":
