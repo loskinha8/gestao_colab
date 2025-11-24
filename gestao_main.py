@@ -9,7 +9,7 @@ import io
 
 
 # pegar variável do secrets
-DATABASE_URL = os.getenv("ConnectDB")
+DATABASE_URL = st.secrets["ConnectDB"]
 
 if not DATABASE_URL:
     st.error("Variável ConnectDB não encontrada no Secrets.")
