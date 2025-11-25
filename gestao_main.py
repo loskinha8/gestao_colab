@@ -7,20 +7,17 @@ import os
 import psycopg2
 import io
 
-
-# pegar variável do secrets
+# pega do secrets
 DATABASE_URL = st.secrets["ConnectDB"]
 
-if not DATABASE_URL:
-    st.error("Variável ConnectDB não encontrada no Secrets.")
-    st.stop()
+# conectar
+conn = psycopg2.connect(DATABASE_URL)
+cursor = conn.cursor()
 
 # remover aspas se tiver
 DATABASE_URL = DATABASE_URL.strip().strip('"').strip("'")
 
-# conectar ao PostgreSQL (NEON exige SSL)
-conn = psycopg2.connect(DATABASE_URL)
-cursor = conn.cursor()
+st.success("Conectado ao PostgreSQL via Tailscale!")
 
 # --- Criar tabela (caso não exista) ---
 cursor.execute("""
